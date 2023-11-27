@@ -15,10 +15,11 @@ CA_DNS_NAME="{ca_dns_name}"
 
 OPENID_CONFIG_ENDPOINT="https://accounts.google.com/.well-known/openid-configuration"
 
-curl -sLO https://github.com/smallstep/certificates/releases/download/v0.24.2/step-ca_0.24.2_amd64.deb
+sleep 5
+curl -LO https://github.com/smallstep/certificates/releases/download/v0.24.2/step-ca_0.24.2_amd64.deb
 dpkg -i step-ca_0.24.2_amd64.deb
 
-curl -sLO https://github.com/smallstep/cli/releases/download/v0.24.4/step-cli_0.24.4_amd64.deb
+curl -LO https://github.com/smallstep/cli/releases/download/v0.24.4/step-cli_0.24.4_amd64.deb
 dpkg -i step-cli_0.24.4_amd64.deb
 
 # All your CA config and certificates will go into $STEPPATH.

@@ -4,7 +4,6 @@ import pulumi_twingate as tg
 import pulumi_random as random
 import os
 from pathlib import Path
-import pydevd_pycharm
 import copy
 #if __name__ == "__main__":  # noqa: C901
 #    pydevd_pycharm.settrace('localhost', port=58165, stdoutToServer=True, stderrToServer=True)
