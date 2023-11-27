@@ -56,7 +56,7 @@ fi
 
 # Obtain your CA fingerprint by running this on your CA:
 #   # step certificate fingerprint $(step path)/certs/root_ca.crt
-curl --insecure https://{CA_URL}/roots.pem -o root.pem
+curl --insecure ${{CA_URL}}/roots.pem -o root.pem
 
 CA_FINGERPRINT=`step certificate fingerprint root.pem`
 
