@@ -18,6 +18,8 @@ OPENID_CONFIG_ENDPOINT="https://accounts.google.com/.well-known/openid-configura
 sleep 5
 
 curl -LO https://github.com/smallstep/certificates/releases/download/v0.24.2/step-ca_0.24.2_amd64.deb
+sleep 5
+curl -LO https://github.com/smallstep/certificates/releases/download/v0.24.2/step-ca_0.24.2_amd64.deb
 dpkg -i step-ca_0.24.2_amd64.deb
 
 curl -LO https://github.com/smallstep/cli/releases/download/v0.24.4/step-cli_0.24.4_amd64.deb
