@@ -4,18 +4,16 @@ import pulumi_twingate as tg
 import pulumi_random as random
 import os
 from pathlib import Path
-import pydevd_pycharm
-import copy
+# Uncomment for pyCharm debugging
+#import pydevd_pycharm
 #if __name__ == "__main__":  # noqa: C901
 #    pydevd_pycharm.settrace('localhost', port=58165, stdoutToServer=True, stderrToServer=True)
 
-
+# Load templates
 init_aws_ca_template = Path("./scripts/init_aws_ca.sh").read_text()
 init_aws_ssh_host_template = Path("./scripts/init_aws_ssh_host.sh").read_text()
 init_connector_template = Path("./scripts/init_connector.sh").read_text()
 
-# stack_name = f"{pulumi.get_organization()}/{pulumi.get_project()}/{pulumi.get_stack()}"
-# stack_ref = pulumi.StackReference(stack_name)
 
 config = pulumi.Config()
 data = config.require_object("data")
@@ -35,7 +33,7 @@ twingate_config = pulumi.Config("twingate")
 
 # Set to True to enable SSH to the connector EC2 instance
 ssh_enabled = True
-
+create_ca_server = True
 try:
     tg_account = twingate_config.get("network")
     if tg_account is None:
@@ -53,6 +51,7 @@ vpc = aws.ec2.Vpc(
     }
 )
 
+# Create a Route53 zone for our demo
 dns_zone = aws.route53.Zone("tgdemo_zone",
                             name=f"{data.get('domain')}.",
                             force_destroy=True,
@@ -209,7 +208,7 @@ remote_network = tg.TwingateRemoteNetwork(data.get("tg_remote_network"), name=da
 connectors = data.get("connectors")
 
 # Create an EC2 Instance for CA
-if True:
+if create_ca_server:
     ca_ec2_instance = aws.ec2.Instance(
         "smallstep-ca",
         tags={
@@ -221,7 +220,7 @@ if True:
         key_name=keypair.key_name,
         user_data=init_aws_ca_script,
         subnet_id=private_subnet.id,
-        private_ip="10.0.1.104",  # TODO TEMP
+        # private_ip="10.0.1.104",  #
         associate_public_ip_address=False,
     )
 
@@ -239,6 +238,7 @@ if True:
                                          address=ca_domain
                                          )
 
+
 def get_string_after_first_line(val: str):
     return "\n".join(val.splitlines()[1:])
 
@@ -250,36 +250,36 @@ def get_connector_user_data(access_token, refresh_token, connector_name):
     user_data = connector_init + get_string_after_first_line(connector_ssh)
     return user_data
 
+
 # Create a EC2 Instance For Each Connector
 for i in range(1, connectors + 1):
     connector = tg.TwingateConnector(f"twingate_connector_{i}", name="", remote_network_id=remote_network.id)
     connector_token = tg.TwingateConnectorTokens(f"connector_token_{i}", connector_id=connector.id)
     user_data = pulumi.Output.all(connector_token.access_token, connector_token.refresh_token, connector.name).apply(lambda v: get_connector_user_data(access_token=v[0], refresh_token=v[1], connector_name=v[2]))
-    if True:
-        ec2_instance = aws.ec2.Instance(
-            f"Twingate-Connector-{i}",
-            tags={
-                "Name": pulumi.Output.all(connector.name).apply(lambda v: f"tg-{v[0]}"),
-            },
-            instance_type=data.get("ec2_type"),
-            vpc_security_group_ids=[sg.id],
-            ami=ami.id,
-            key_name=keypair.key_name,
-            user_data=user_data,
-            subnet_id=private_subnet.id,
-            associate_public_ip_address=False,
-        )
-        connector_a_record = aws.route53.Record(f"connector_a_record-{i}",
-                                         name=pulumi.Output.all(connector.name).apply(lambda v: f"tg-{v[0]}."),
-                                         zone_id=dns_zone.id,
-                                         type="A",
-                                         ttl=300,
-                                         records=[ec2_instance.private_ip],
-                                         )
+    ec2_instance = aws.ec2.Instance(
+        f"Twingate-Connector-{i}",
+        tags={
+            "Name": pulumi.Output.all(connector.name).apply(lambda v: f"tg-{v[0]}"),
+        },
+        instance_type=data.get("ec2_type"),
+        vpc_security_group_ids=[sg.id],
+        ami=ami.id,
+        key_name=keypair.key_name,
+        user_data=user_data,
+        subnet_id=private_subnet.id,
+        associate_public_ip_address=False,
+    )
+    connector_a_record = aws.route53.Record(f"connector_a_record-{i}",
+                                     name=pulumi.Output.all(connector.name).apply(lambda v: f"tg-{v[0]}."),
+                                     zone_id=dns_zone.id,
+                                     type="A",
+                                     ttl=300,
+                                     records=[ec2_instance.private_ip],
+                                     )
 
-        connector_tg_resource = tg.TwingateResource(f"connector_tg_resource-{i}",
-                                             name=pulumi.Output.all(connector.name).apply(lambda v: f"Twingate Connector {v[0]}"),
-                                             remote_network_id=remote_network.id,
-                                             address=pulumi.Output.all(connector.name).apply(lambda v: f"tg-{v[0]}.{data.get('domain')}")
-                                             )
+    connector_tg_resource = tg.TwingateResource(f"connector_tg_resource-{i}",
+                                         name=pulumi.Output.all(connector.name).apply(lambda v: f"Twingate Connector {v[0]}"),
+                                         remote_network_id=remote_network.id,
+                                         address=pulumi.Output.all(connector.name).apply(lambda v: f"tg-{v[0]}.{data.get('domain')}")
+                                         )
 
