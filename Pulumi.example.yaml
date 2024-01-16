@@ -1,0 +1,30 @@
+config:
+  pulumi-twingate-smallstep:ca_config:
+    ca_email: YOUR_CA_EMAIL@example.com
+    ca_name: Twingate Smallstep Demo CA
+    ca_hostname: ca
+    ca_oauth_allowed_domain: YOUR_DOMAIN_NAME
+    ca_oauth_client_id: OAUTH2_CLIENT_ID
+    ca_oauth_client_secret:
+      secure: OAUTH2_CLIENT_SECRET
+  pulumi-twingate-smallstep:data:
+    domain: tgdemo.int
+    active: true
+    connectors: 2
+    ec2_type: t2.micro
+    eip_name: eip
+    igw_name: igw
+    key_name: SSH_KEY_NAME
+    natgw_name: ngw
+    prv_cidr: 10.0.1.0/24
+    prv_subnet_name: private_subnet
+    prvrtasst_name: prv_rt_asst
+    prvrttable_name: prvrttable
+    pub_cidr: 10.0.2.0/24
+    pub_subnet_name: public_subnet
+    pubrtasst_name: pub_rt_asst
+    pubrttable_name: pubrttable
+    sec_grp_name: egress_sec_grp
+    tg_remote_network: smallstep_demo
+    vpc_cidr: 10.0.0.0/16
+    vpc_name: smallstep_demo_vpc
