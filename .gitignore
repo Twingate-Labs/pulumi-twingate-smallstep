@@ -1,4 +1,4 @@
 *.pyc
 venv/
 .idea/
-Pulumi.dev.yaml
+../../../Library/Application Support/JetBrains/PyCharm2023.2/scratches/Pulumi.dev.yaml
